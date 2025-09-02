@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+      integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header>
+      <div class="logo">
+        <a href="#"><img src="/assets/images/logo.png" alt="logo" /></a>
+      </div>
+
+      <nav class="header__navbar">
+        <ul>
+          <li><a href="#">HOME</a></li>
+          <li><a href="#">PRODUCT</a></li>
+          <li><a href="order_user.html">ORDER</a></li>
+          <li><a href="#">ABOUT</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__info">
+        <i class="fa fa-search"></i>
+        <a class="cart" href="#">
+          <p class="cart-item">0</p>
+          <i class="fa fa-shopping-cart"></i>
+        </a>
+
+        <a class="header__account" href="login.html">
+          <i class="fa fa-user"></i>
+          <p id="accountname">Log in</p>
+        </a>
+      </div>
+    </header>
+
+    <!-- BODY  -->
+    <div id="checkoutCart"></div>
+
+    <h4>Thông tin người nhận</h4>
+    <label>Tên:</label><input id="receiverName" type="text" />
+    <label>Địa chỉ:</label>
+    <select id="addressSelect">
+      <option>Hà Nội</option>
+      <option>TP HCM</option>
+      <option>Đà Nẵng</option>
+    </select>
+    <label>SĐT:</label><input id="phone" type="text" />
+
+    <button onclick="confirmOrder()">Xác nhận</button>
+    <button onclick="cancelOrder()">Hủy</button>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="copyright">
+        <p>Copyright &copy; 2025 All rights reserved</p>
+        <a href="#">BANANAS</a>
+      </div>
+    </footer>
+
+    <script>
+      let orderTemp = JSON.parse(localStorage.getItem("orderTemp")) || [];
+      let totalPrice = parseInt(localStorage.getItem("totalPrice"));
+
+      function displayCheckoutCart() {
+        const container = document.getElementById("checkoutCart");
+        container.innerHTML = "";
+        for (let item of orderTemp) {
+          const div = document.createElement("div");
+          div.innerHTML = `       
+          <img src="${item.image}" width="50" />      
+          ${item.name} - ${item.quantity} x ${item.price} VND    
+          `;
+          container.appendChild(div);
+        }
+        const totalDiv = document.createElement("div");
+        totalDiv.innerHTML = `Tổng tiền: ${totalPrice.toLocaleString()} VND`;
+        container.appendChild(totalDiv);
+      }
+
+      displayCheckoutCart();
+
+      function cancelOrder() {
+        window.location.href = "index_user.html";
+      }
+
+      function confirmOrder() {
+        const receiver = document.getElementById("receiverName").value;
+        const address = document.getElementById("addressSelect").value;
+        const phone = document.getElementById("phone").value;
+
+        if (!receiver || !phone) {
+          alert("Vui lòng điền đầy đủ thông tin");
+          return;
+        }
+
+        const orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+        orders.unshift({
+          id: Date.now(),
+          items: orderTemp,
+          receiver,
+          address,
+          phone,
+          status: "Đã đặt hàng",
+        });
+
+        localStorage.setItem("orders", JSON.stringify(orders));
+        localStorage.setItem("totalPrice", totalPrice);
+        localStorage.removeItem("orderTemp");
+        localStorage.removeItem("cart");
+        window.location.href = "order_user.html";
+      }
+    </script>
+  </body>
+</html>

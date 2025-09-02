@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+        <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+      integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+     <!-- HEADER -->
+    <header>
+      <div class="logo">
+        <a href="#"><img src="/assets/images/logo.png" alt="logo" /></a>
+      </div>
+
+      <nav class="header__navbar">
+        <ul>
+          <li><a href="index_user.html">HOME</a></li>
+          <li><a href="index_user.html">PRODUCT</a></li>
+          <li><a href="#">ORDER</a></li>
+          <li><a href="#">ABOUT</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__info">
+        <i class="fa fa-search"></i>
+        <a class="cart" href="#">
+          <p class="cart-item">0</p>
+          <i class="fa fa-shopping-cart"></i>
+        </a>
+
+        <a class="header__account" href="login.html">
+          <i class="fa fa-user"></i>
+          <p id="accountname">Log in</p>
+        </a>
+      </div>
+    </header>
+
+    <!-- BODY  -->
+
+   <h2>Đơn hàng của bạn</h2>
+  <div id="orderList"></div>
+
+  <!-- FOOTER -->
+    <footer>
+      <div class="copyright">
+        <p>Copyright &copy; 2025 All rights reserved</p>
+        <a href="#">BANANAS</a>
+      </div>
+    </footer>
+
+
+  <script>
+
+    window.onload = function() {
+      let orders = JSON.parse(localStorage.getItem("orders")) || [];
+      let totalPrice = parseInt(localStorage.getItem("totalPrice"));
+
+
+      const container = document.getElementById("orderList");
+
+      if (orders.length === 0) {
+        container.innerHTML = "<p>Chưa có đơn hàng nào.</p>";
+        return;
+      }
+      
+      for (let order of orders) {
+        const div = document.createElement("div");        
+        let itemsHTML = "";
+
+       for (let item of order.items) {  
+        itemsHTML += `<p>${item.name} x ${item.quantity} = ${item.price} VND</p>`;      
+      }
+
+        div.innerHTML = `
+          <h3>Đơn #${order.id}</h3>
+          <p>Người nhận: ${order.receiver}</p>
+          <p>Địa chỉ: ${order.address}</p>
+          <p>SĐT: ${order.phone}</p>
+          <div>${itemsHTML}</div>
+          <p>Tổng tiền: ${totalPrice.toLocaleString()} VND</p>
+          <p>Trạng thái: <span id="status-${order.id}">${order.status}</span></p>
+          <button onclick="cancelOrder(${order.id})">Hủy</button>
+        `;
+
+        container.appendChild(div);
+      };
+    }
+
+    function cancelOrder(id) {
+      const orders = JSON.parse(localStorage.getItem("orders")) || [];
+      const orderCancelled = orders.find(o => o.id === id);
+      if (!orderCancelled) return;
+
+      orderCancelled.status = "Đã hủy";
+      localStorage.setItem("orders", JSON.stringify(orders));
+      document.getElementById(`status-${id}`).textContent = orderCancelled.status;
+    }
+  </script>
+  </body>
+</html>

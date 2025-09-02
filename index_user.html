@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopping website - User</title>
+    <!-- LINK CSS -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+      integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <header>
+      <div class="logo">
+        <a href="#"><img src="/assets/images/logo.png" alt="logo" /></a>
+      </div>
+
+      <nav class="header__navbar">
+        <ul>
+          <li><a href="#">HOME</a></li>
+          <li><a href="#">PRODUCT</a></li>
+          <li><a href="order_user.html">ORDER</a></li>
+          <li><a href="#">ABOUT</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__info">
+        <a class="cart" href="#">
+          <p class="cart-item">0</p>
+          <i class="fa fa-shopping-cart"></i>
+        </a>
+        <a class="header__account" href="login.html">
+          <i class="fa fa-user"></i>
+          <p id="accountname">Log in</p>
+        </a>
+      </div>
+    </header>
+
+    <br />
+    <form class="searchbar" action="index_user.html">
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Search.."
+        name="search"
+      />
+      <button type="button" onclick="handleSearch()">
+        <i class="fa fa-search"></i>
+      </button>
+    </form>
+
+    <br />
+    <br />
+
+    <div id="cartBlock" class="cart-block" style="display: none">
+      <h3>Giỏ hàng</h3>
+      <div id="cartList"></div>
+      <div id="cartTotal"></div>
+      <button onclick="checkout()">Thanh toán</button>
+      <button onclick="toggleCart()">Đóng</button>
+    </div>
+
+    <!-- BODY -->
+
+    <section id="productList" class="product-list"></section>
+
+    <!-- Modal -->
+    <div id="productModal" class="modal">
+      <div class="modal-content">
+        <h3>Product Information</h3>
+        <label>Name</label><input id="name" placeholder="Name" disabled />
+        <label>Description</label
+        ><input id="description" placeholder="Description" disabled />
+        <label>Price</label><input id="price" placeholder="Price" disabled />
+        <label>Quantity</label
+        ><input id="quantity" placeholder="Quantity" disabled />
+        <button onclick="closeModal()">Back</button>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="copyright">
+        <p>Copyright &copy; 2025 All rights reserved</p>
+        <a href="#">BANANAS</a>
+      </div>
+    </footer>
+
+    <!-- SCRIPT -->
+    <script>
+      // PRODUCTS
+      const products = JSON.parse(localStorage.getItem("products")) || [];
+
+      displayProducts();
+
+      function displayProducts(list = products) {
+        let container = document.getElementById("productList");
+        let items = "";
+
+        for (let i = 0; i < list.length; i++) {
+          items += `      
+          <div class="product-item" >        
+            <img src="${list[i].image}" alt="image" onclick="openModal(${i})"/>        
+            <div class="product-info">          
+              <h3>${list[i].name}</h3>          
+              <p>${list[i].price} VND</p>          
+              <button onclick="addToCartById(${list[i].id})" class="btn">Add to cart</button>        
+            </div>      
+          </div>`;
+        }
+
+        container.innerHTML = items;
+      }
+
+      // MODAL
+
+      function openModal(index = null) {
+        const modal = document.getElementById("productModal");
+        modal.style.display = "flex";
+        let p = products[index];
+
+        document.getElementById("name").value = p.name;
+        document.getElementById("description").value = p.description;
+        document.getElementById("price").value = p.price;
+        document.getElementById("quantity").value = p.quantity;
+      }
+
+      function closeModal() {
+        document.getElementById("productModal").style.display = "none";
+      }
+
+      // SEARCH
+
+      function handleSearch() {
+        let keyword = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        let result = products.filter((p) =>
+          p.name.toLowerCase().includes(keyword)
+        );
+        displayProducts(result);
+      }
+
+      // CART
+
+      const cartIcon = document.querySelector(".header__info .cart");
+      cartIcon.addEventListener("click", () => toggleCart());
+
+      function toggleCart() {
+        const cartBlock = document.getElementById("cartBlock");
+        cartBlock.style.display =
+          cartBlock.style.display === "flex" ? "none" : "flex";
+        displayCart();
+      }
+
+      let cart = [];
+
+      function addToCartById(id) {
+        const productAdded = products.find((p) => p.id == id); // tìm trong products theo id
+        if (!productAdded) return;
+
+        const existingProduct = cart.find((item) => item.id == productAdded.id);
+        if (existingProduct) {
+          existingProduct.quantity++;
+        } else {
+          cart.unshift({ ...productAdded, quantity: 1 });
+        }
+
+        updateCartCount();
+        displayCart();
+        localStorage.setItem("cart", JSON.stringify(cart));
+      }
+
+      // let totalPrice = 0;
+      function displayCart() {
+        const container = document.getElementById("cartList");
+        container.innerHTML = "";
+
+        let totalPrice = 0;
+
+        cart.forEach((item, index) => {
+          const itemTotal =
+            Number(item.price.replace(/,/g, "")) * item.quantity;
+          totalPrice += itemTotal;
+
+          container.innerHTML += `      
+          <div class="cart-item-block">        
+          <img src="${item.image}" width="50" />        
+          <span>${item.name}</span>
+          <div>
+          <button onclick="decreaseQuantity(${index})">-</button>
+          <span>${item.quantity}</span>
+          <button onclick="increaseQuantity(${index})">+</button>
+          </div>
+          <span>${item.price} x ${
+            item.quantity
+          } = ${itemTotal.toLocaleString()} VND</span>
+          </div>    
+          `;
+        });
+
+        document.getElementById(
+          "cartTotal"
+        ).textContent = `Tổng tiền: ${totalPrice.toLocaleString()} VND`;
+        localStorage.setItem("totalPrice", totalPrice);
+
+        updateCartCount();
+      }
+
+      function updateCartCount() {
+        let cartCount = 0;
+        for (let i = 0; i < cart.length; i++) {
+          cartCount += cart[i].quantity;
+        }
+        document.querySelector(".cart-item").textContent = cartCount;
+      }
+
+      function increaseQuantity(index) {
+        cart[index].quantity++;
+        displayCart();
+      }
+
+      function decreaseQuantity(index) {
+        if (cart[index].quantity > 1) {
+          cart[index].quantity--;
+        } else {
+          cart.splice(index, 1);
+        }
+        displayCart();
+      }
+
+      function checkout() {
+        if (cart.length === 0) {
+          alert("Giỏ hàng trống!");
+          return;
+        }
+        localStorage.setItem("orderTemp", JSON.stringify(cart));
+        window.location.href = "checkout.html";
+      }
+    </script>
+  </body>
+</html>
