@@ -43,8 +43,8 @@
         <button id="logoutBtn">Logout</button>
       </div>
     </header>
-
     <br />
+
     <form class="searchbar" action="index_administration.html">
       <input
         id="searchInput"
@@ -56,12 +56,10 @@
         <i class="fa fa-search"></i>
       </button>
     </form>
-
     <br />
     <br />
 
     <button class="btn-add" onclick="openModal()">Add new product</button>
-
     <br />
     <br />
 
@@ -78,11 +76,37 @@
         <label>Description</label
         ><input id="description" placeholder="Description" />
         <label>Price</label><input id="price" placeholder="Price" />
-        <label>Quantity</label><input id="quantity" placeholder="Quantity" />
+        <label>Total Quantity</label
+        ><input id="quantity" type="number" disabled />
+        <p>Stock</p>
+        <label>Stock (Size 40)</label>
+        <input
+          id="size40"
+          type="number"
+          placeholder="Size 40"
+          oninput="updateQuantity()"
+        />
+
+        <label>Stock (Size 41)</label>
+        <input
+          id="size41"
+          type="number"
+          placeholder="Size 41"
+          oninput="updateQuantity()"
+        />
+
+        <label>Stock (Size 42)</label>
+        <input
+          id="size42"
+          type="number"
+          placeholder="Size 42"
+          oninput="updateQuantity()"
+        />
+
         <label>Image</label><input id="image" placeholder="Image URL" />
         <div>
           <button onclick="saveProduct()">Save</button>
-          <button class="delete" onclick="deleteProduct()">Delete</button>
+          <button id="deleteBtn" onclick="deleteProduct()">Delete</button>
           <button onclick="closeModal()">Cancel</button>
         </div>
       </div>
@@ -123,19 +147,13 @@
       // PRODUCTS
 
       class Product {
-        constructor(id, image, name, description, price, quantity) {
+        constructor(id, image, name, description, price, sizes) {
           this.id = id;
           this.image = image;
           this.name = name;
           this.description = description;
           this.price = price;
-          // this.quantity = quantity;
           this.sizes = sizes;
-          let stock = 0;
-          for (let size in sizes) {
-            stock += sizes[size];
-          }
-          this.quantity = stock;
         }
       }
 
@@ -288,6 +306,15 @@
         container.innerHTML = items;
       }
 
+      function updateQuantity() {
+        const size40 = parseInt(document.getElementById("size40").value) || 0;
+        const size41 = parseInt(document.getElementById("size41").value) || 0;
+        const size42 = parseInt(document.getElementById("size42").value) || 0;
+
+        const totalQuantity = size40 + size41 + size42;
+        document.getElementById("quantity").value = totalQuantity;
+      }
+
       // MODAL
       let editingIndex = null;
 
@@ -295,7 +322,7 @@
         const modal = document.getElementById("productModal");
         modal.style.display = "flex";
 
-        const deleteBtn = document.querySelector("#productModal .delete");
+        const deleteBtn = document.getElementById("deleteBtn");
 
         if (index !== null) {
           // chỉnh sửa sản phẩm
@@ -305,7 +332,10 @@
           document.getElementById("name").value = p.name;
           document.getElementById("description").value = p.description;
           document.getElementById("price").value = p.price;
-          document.getElementById("quantity").value = p.quantity;
+          document.getElementById("size40").value = p.sizes[40];
+          document.getElementById("size41").value = p.sizes[41];
+          document.getElementById("size42").value = p.sizes[42];
+          updateQuantity();
           document.getElementById("image").value = p.image;
           deleteBtn.style.display = "inline-block";
         } else {
@@ -315,7 +345,10 @@
           document.getElementById("name").value = "";
           document.getElementById("description").value = "";
           document.getElementById("price").value = "";
-          document.getElementById("quantity").value = "";
+          document.getElementById("size40").value = 0;
+          document.getElementById("size41").value = 0;
+          document.getElementById("size42").value = 0;
+          updateQuantity();
           document.getElementById("image").value = "";
           deleteBtn.style.display = "none";
         }
@@ -331,6 +364,11 @@
         const name = document.getElementById("name").value;
         const description = document.getElementById("description").value;
         const price = document.getElementById("price").value;
+        const sizes = {
+          40: parseInt(document.getElementById("size40").value),
+          41: parseInt(document.getElementById("size41").value),
+          42: parseInt(document.getElementById("size42").value),
+        };
         const quantity = document.getElementById("quantity").value;
         const image = document.getElementById("image").value;
 
@@ -341,12 +379,19 @@
             name,
             description,
             price,
-            quantity,
+            sizes,
             image,
           };
         } else {
           // Add new
-          products.unshift({ id, name, description, price, quantity, image });
+          products.unshift({
+            id,
+            name,
+            description,
+            price,
+            sizes,
+            image,
+          });
         }
         localStorage.setItem("products", JSON.stringify(products));
         displayProducts();

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Order - User</title>
         <link
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
@@ -65,10 +65,7 @@
   <script>
 
     window.onload = function() {
-      let orders = JSON.parse(localStorage.getItem("orders")) || [];
-      let totalPrice = parseInt(localStorage.getItem("totalPrice"));
-
-
+      let orders = JSON.parse(localStorage.getItem("orders")) || [];      
       const container = document.getElementById("orderList");
 
       if (orders.length === 0) {
@@ -81,7 +78,7 @@
         let itemsHTML = "";
 
        for (let item of order.items) {  
-        itemsHTML += `<p>${item.name} x ${item.quantity} = ${item.price} VND</p>`;      
+        itemsHTML += `<p>${item.name} - Size ${item.size} x ${item.quantity} = ${item.price} VND</p>`;      
       }
 
         div.innerHTML = `
@@ -90,24 +87,38 @@
           <p>Địa chỉ: ${order.address}</p>
           <p>SĐT: ${order.phone}</p>
           <div>${itemsHTML}</div>
-          <p>Tổng tiền: ${totalPrice.toLocaleString()} VND</p>
+          <p>Tổng tiền: ${order.totalPrice.toLocaleString()} VND</p>
           <p>Trạng thái: <span id="status-${order.id}">${order.status}</span></p>
-          <button onclick="cancelOrder(${order.id})">Hủy</button>
+          <button id="cancelBtn" onclick="cancelOrder(${order.id})">Hủy</button>
         `;
 
         container.appendChild(div);
       };
     }
-
+   
     function cancelOrder(id) {
-      const orders = JSON.parse(localStorage.getItem("orders")) || [];
+      const orders = JSON.parse(localStorage.getItem("orders"));
       const orderCancelled = orders.find(o => o.id === id);
-      if (!orderCancelled) return;
-
-      orderCancelled.status = "Đã hủy";
-      localStorage.setItem("orders", JSON.stringify(orders));
-      document.getElementById(`status-${id}`).textContent = orderCancelled.status;
+      if (!orderCancelled) return; 
+      if (orderCancelled.status !== "Đã đặt hàng") {    
+        alert("Đơn hàng này không thể hủy!");    
+        return;  
+      }   
+      const products = JSON.parse(localStorage.getItem("products"));  
+      for (let item of orderCancelled.items) {    
+      const product = products.find(p => p.id === item.id);   
+      product.sizes[item.size] += item.quantity; // trả lại stock    
+      }    
+      // Lưu products đã cập nhật    
+      localStorage.setItem("products", JSON.stringify(products));
+      orderCancelled.status = "Đã hủy";   
+      localStorage.setItem("orders", JSON.stringify(orders));        
+      document.getElementById(`status-${id}`).textContent = orderCancelled.status;          
     }
+
+
+
+
   </script>
   </body>
 </html>

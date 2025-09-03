@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Order - Administration</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
@@ -89,7 +89,6 @@
 
       window.onload = function () {
         let orders = JSON.parse(localStorage.getItem("orders")) || [];
-        let totalPrice = parseInt(localStorage.getItem("totalPrice"));
 
         const container = document.getElementById("adminOrderList");
 
@@ -103,7 +102,8 @@
           let itemsHTML = "";
 
           for (let item of order.items) {
-            itemsHTML += `<p>${item.name} x ${item.quantity} = ${item.price}</p>`;
+            itemsHTML += `<p>${item.name} - Size ${item.size} x ${item.quantity} = ${item.price} VND</p>
+        `;
           }
 
           div.innerHTML = `
@@ -112,7 +112,7 @@
       <p>Địa chỉ: ${order.address}</p>
       <p>SĐT: ${order.phone}</p>
       <div>${itemsHTML}</div>
-      <p>Tổng tiền: ${totalPrice.toLocaleString()} VND</p>
+      <p>Tổng tiền: ${order.totalPrice.toLocaleString()} VND</p>
       <label>Status:</label>
       <select onchange="updateStatus(${order.id}, this.value)">
         <option value="Đã đặt hàng" ${
@@ -134,7 +134,7 @@
       };
 
       function updateStatus(id, newStatus) {
-        const orders = JSON.parse(localStorage.getItem("orders")) || [];
+        const orders = JSON.parse(localStorage.getItem("orders"));
         const order = orders.find((o) => o.id === id);
         if (!order) return;
 

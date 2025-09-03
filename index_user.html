@@ -68,7 +68,7 @@
     <div id="cartBlock" class="cart-block" style="display: none">
       <h3>Giỏ hàng</h3>
       <div id="cartList"></div>
-      <div id="cartTotal"></div>
+      <div id="cartPrice"></div>
       <button onclick="checkout()">Thanh toán</button>
       <button onclick="toggleCart()">Đóng</button>
     </div>
@@ -85,9 +85,54 @@
         <label>Description</label
         ><input id="description" placeholder="Description" disabled />
         <label>Price</label><input id="price" placeholder="Price" disabled />
-        <label>Quantity</label
+        <label>Total Quantity</label
         ><input id="quantity" placeholder="Quantity" disabled />
+        <p>Stock</p>
+        <label>Stock (Size 40)</label>
+        <input
+          id="size40"
+          type="number"
+          placeholder="Size 40"
+          oninput="updateQuantity()"
+          disabled
+        />
+
+        <label>Stock (Size 41)</label>
+        <input
+          id="size41"
+          type="number"
+          placeholder="Size 41"
+          oninput="updateQuantity()"
+          disabled
+        />
+
+        <label>Stock (Size 42)</label>
+        <input
+          id="size42"
+          type="number"
+          placeholder="Size 42"
+          oninput="updateQuantity()"
+          disabled
+        />
         <button onclick="closeModal()">Back</button>
+      </div>
+    </div>
+
+    <div id="addCartModal" class="modal">
+      <div class="modal-content">
+        <h3>Chọn size và số lượng</h3>
+        <label>Size:</label>
+        <select id="productSize" onchange="updateStockInfo()">
+          <option value="40">40</option>
+          <option value="41">41</option>
+          <option value="42">42</option>
+        </select>
+        <br />
+        <label>Số lượng:</label>
+        <input type="number" id="sizeQuantity" value="1" />
+        <p id="stockInfo"></p>
+        <button id="confirmBtn" onclick="confirmAddToCart()">Confirm</button>
+        <button onclick="closeAddCartModal()">Cancel</button>
       </div>
     </div>
 
@@ -125,6 +170,14 @@
         container.innerHTML = items;
       }
 
+      function updateQuantity() {
+        const size40 = parseInt(document.getElementById("size40").value) || 0;
+        const size41 = parseInt(document.getElementById("size41").value) || 0;
+        const size42 = parseInt(document.getElementById("size42").value) || 0;
+        const totalQuantity = size40 + size41 + size42;
+        document.getElementById("quantity").value = totalQuantity;
+      }
+
       // MODAL
 
       function openModal(index = null) {
@@ -135,7 +188,10 @@
         document.getElementById("name").value = p.name;
         document.getElementById("description").value = p.description;
         document.getElementById("price").value = p.price;
-        document.getElementById("quantity").value = p.quantity;
+        document.getElementById("size40").value = p.sizes[40];
+        document.getElementById("size41").value = p.sizes[41];
+        document.getElementById("size42").value = p.sizes[42];
+        updateQuantity();
       }
 
       function closeModal() {
@@ -167,24 +223,71 @@
       }
 
       let cart = [];
+      let currentProduct;
 
       function addToCartById(id) {
-        const productAdded = products.find((p) => p.id == id); // tìm trong products theo id
-        if (!productAdded) return;
+        currentProduct = products.find((p) => p.id == id);
+        if (!currentProduct) return;
 
-        const existingProduct = cart.find((item) => item.id == productAdded.id);
-        if (existingProduct) {
-          existingProduct.quantity++;
-        } else {
-          cart.unshift({ ...productAdded, quantity: 1 });
-        }
+        const modal = document.getElementById("addCartModal");
+        modal.style.display = "flex";
 
-        updateCartCount();
-        displayCart();
-        localStorage.setItem("cart", JSON.stringify(cart));
+        updateStockInfo();
       }
 
-      // let totalPrice = 0;
+      function updateStockInfo() {
+        const size = parseInt(document.getElementById("productSize").value);
+        const stock = currentProduct.sizes[size];
+        const qtyInput = document.getElementById("sizeQuantity");
+        const stockInfo = document.getElementById("stockInfo");
+
+        if (stock === 0) {
+          qtyInput.value = 0;
+          qtyInput.disabled = true; // khóa ô input
+          stockInfo.textContent = "Hết hàng cho size " + size;
+          document.getElementById("confirmBtn").style.display = "none";
+        } else {
+          qtyInput.disabled = false; // mở khóa nếu còn hàng
+          if (qtyInput.value < 1) qtyInput.value = 1;
+          if (qtyInput.value > stock) qtyInput.value = stock;
+          qtyInput.max = stock;
+          qtyInput.min = 1;
+          stockInfo.textContent = `Sản phẩm hiện có: ${stock}`;
+          document.getElementById("confirmBtn").style.display = "inline-block";
+        }
+      }
+
+      function confirmAddToCart() {
+        const size = parseInt(document.getElementById("productSize").value);
+        const quantity = parseInt(
+          document.getElementById("sizeQuantity").value
+        );
+
+        const existingItem = cart.find(
+          (item) => item.id === currentProduct.id && item.size === size
+        );
+        if (existingItem) {
+          existingItem.quantity += quantity;
+        } else {
+          cart.push({
+            id: currentProduct.id,
+            name: currentProduct.name,
+            price: currentProduct.price,
+            size: size,
+            quantity: quantity,
+            image: currentProduct.image,
+          });
+        }
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+        displayCart();
+        closeAddCartModal();
+      }
+
+      function closeAddCartModal() {
+        document.getElementById("addCartModal").style.display = "none";
+      }
+
       function displayCart() {
         const container = document.getElementById("cartList");
         container.innerHTML = "";
@@ -192,14 +295,15 @@
         let totalPrice = 0;
 
         cart.forEach((item, index) => {
-          const itemTotal =
+          const itemTotalPrice =
             Number(item.price.replace(/,/g, "")) * item.quantity;
-          totalPrice += itemTotal;
+          totalPrice += itemTotalPrice;
 
           container.innerHTML += `      
           <div class="cart-item-block">        
-          <img src="${item.image}" width="50" />        
-          <span>${item.name}</span>
+          <img src="${item.image}" width="50" /> <br>            
+          <span>Product: ${item.name}</span> <br> 
+          <span>Size: ${item.size}</span>
           <div>
           <button onclick="decreaseQuantity(${index})">-</button>
           <span>${item.quantity}</span>
@@ -207,13 +311,13 @@
           </div>
           <span>${item.price} x ${
             item.quantity
-          } = ${itemTotal.toLocaleString()} VND</span>
+          } = ${itemTotalPrice.toLocaleString()} VND</span>
           </div>    
           `;
         });
 
         document.getElementById(
-          "cartTotal"
+          "cartPrice"
         ).textContent = `Tổng tiền: ${totalPrice.toLocaleString()} VND`;
         localStorage.setItem("totalPrice", totalPrice);
 
@@ -229,8 +333,19 @@
       }
 
       function increaseQuantity(index) {
-        cart[index].quantity++;
-        displayCart();
+        const cartItem = cart[index];
+
+        const product = products.find((p) => p.id == cartItem.id);
+        if (!product) return;
+
+        const stock = product.sizes[cartItem.size];
+
+        if (cartItem.quantity < stock) {
+          cartItem.quantity++;
+          displayCart();
+        } else {
+          alert("Không thể tăng quá số lượng hiện có của size này!");
+        }
       }
 
       function decreaseQuantity(index) {
@@ -247,6 +362,15 @@
           alert("Giỏ hàng trống!");
           return;
         }
+        // Cập nhật stock cho sản phẩm gốc
+        cart.forEach((item) => {
+          const product = products.find((p) => p.id === item.id);
+          if (product) {
+            product.sizes[item.size] -= item.quantity;
+          }
+        });
+
+        localStorage.setItem("products", JSON.stringify(products));
         localStorage.setItem("orderTemp", JSON.stringify(cart));
         window.location.href = "checkout.html";
       }

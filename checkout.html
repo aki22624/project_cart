@@ -88,9 +88,9 @@
           `;
           container.appendChild(div);
         }
-        const totalDiv = document.createElement("div");
-        totalDiv.innerHTML = `Tổng tiền: ${totalPrice.toLocaleString()} VND`;
-        container.appendChild(totalDiv);
+        const totalPriceDiv = document.createElement("div");
+        totalPriceDiv.innerHTML = `Tổng tiền: ${totalPrice.toLocaleString()} VND`;
+        container.appendChild(totalPriceDiv);
       }
 
       displayCheckoutCart();
@@ -118,10 +118,10 @@
           address,
           phone,
           status: "Đã đặt hàng",
+          totalPrice: totalPrice,
         });
 
         localStorage.setItem("orders", JSON.stringify(orders));
-        localStorage.setItem("totalPrice", totalPrice);
         localStorage.removeItem("orderTemp");
         localStorage.removeItem("cart");
         window.location.href = "order_user.html";
